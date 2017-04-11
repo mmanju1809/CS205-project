@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <omp.h>
 
-#define N 3
+#define N 2
 #define P_SIZE ((int) (pow(12, N+1)-1)/11)
 
 /* Barriers */
@@ -25,6 +25,10 @@ long double kb = 8.6173324e-5;
 long double v = 1.6e13;
 long double T = 1300;
 /* T = 1800; */
+
+/* transition rates */
+long double r1, r2, r3, r4, r5;
+long double Q1, Q2;
 
 /* Nearest neighbour distance */
 long double nnd = 3.0847268089e-1;
@@ -68,20 +72,25 @@ long double opvec2[4][3][3];
 
 // mat0 is product, mat1, mat2 are things to be multiplied
 void mat_mul(long double prod[3][3], long double mat1[3][3], long double mat2[3][3]) {
-  int i, j, k;
 
-  // #pragma omp parallel shared(prod, mat1, mat2) private(i, j, k)
-  // {
-  //   #pragma omp for schedule(static)
-    for (i = 0; i < 3; i++) {
-      for (j = 0; j < 3; j++) {
-        prod[i][j] = 0.0;
-        for (k = 0; k < 3; k++) {
-          prod[i][j] += mat1[i][k] * mat2[k][j];
-        }
-      }
-    }
-  // }
+  prod[0][0] = mat1[0][0]*mat2[0][0] + mat1[0][1]*mat2[1][0] + mat1[0][2]*mat2[2][0];
+  prod[0][1] = mat1[0][0]*mat2[0][1] + mat1[0][1]*mat2[1][1] + mat1[0][2]*mat2[2][1];
+  prod[0][2] = mat1[0][0]*mat2[0][2] + mat1[0][1]*mat2[1][2] + mat1[0][2]*mat2[2][2];
+  prod[1][0] = mat1[1][0]*mat2[0][0] + mat1[1][1]*mat2[1][0] + mat1[1][2]*mat2[2][0];
+  prod[1][1] = mat1[1][0]*mat2[0][1] + mat1[1][1]*mat2[1][1] + mat1[1][2]*mat2[2][1];
+  prod[1][2] = mat1[1][0]*mat2[0][2] + mat1[1][1]*mat2[1][2] + mat1[1][2]*mat2[2][2];
+  prod[2][0] = mat1[2][0]*mat2[0][0] + mat1[2][1]*mat2[1][0] + mat1[2][2]*mat2[2][0];
+  prod[2][1] = mat1[2][0]*mat2[0][1] + mat1[2][1]*mat2[1][1] + mat1[2][2]*mat2[2][1];
+  prod[2][2] = mat1[2][0]*mat2[0][2] + mat1[2][1]*mat2[1][2] + mat1[2][2]*mat2[2][2];
+
+  return; 
+}
+
+void mat_vec_mul(long double prod[3], long double vec[3], long double mat[3][3]) { 
+ 
+  prod[0] = mat[0][0]*vec[0] + mat[0][1]*vec[1] + mat[0][2]*vec[2];
+  prod[1] = mat[1][0]*vec[0] + mat[1][1]*vec[1] + mat[1][2]*vec[2];
+  prod[2] = mat[2][0]*vec[0] + mat[2][1]*vec[1] + mat[2][2]*vec[2];
 
   return; 
 }
@@ -126,68 +135,6 @@ void mat_pow(long double mat0[3][3], long double mat2[3][3], int power) {
   return; 
 }
 
-// void mat_pow (long double prod[3][3], long double mat[3][3], int power) {
-//   int i, j, k;
-
-//   // set to identity matrix
-//   for (i = 0; i < 3; i++) {
-//     for (j = 0; j < 3; j++) {
-//       if (i == j) {
-//         prod[i][j] = 1.0;
-//       }
-//       else {
-//         prod[i][j] = 0.0;
-//       }
-//     }
-//   }
-
-//   if (power == 0) {
-//     return;  
-//   }
-//   // repeated exponentiation
-//   else {
-//     long double temp[3][3];
-//     while (power != 0) {
-//       if (power % 2 == 1) {
-//         mat_mul(temp, prod, mat);
-//         for (i = 0; i < 3; i++) {
-//           memcpy(&prod[i], &temp[i], sizeof(temp[0]));
-//         }
-//       }
-      
-//       power = power >> 1;
-      
-//       if (power == 0) {
-//         break;
-//       }
-
-//       mat_mul(temp, mat, mat);
-//       for (i = 0; i < 3; i++) {
-//         memcpy(&mat[i], &temp[i], sizeof(temp[0]));
-//       }
-//     }
-//   }
-
-//   return;
-// }
-
-void mat_vec_mul(long double prod[3], long double vec[3], long double mat[3][3]) {
-  int i, k;
-  
-  // #pragma omp parallel shared(prod, vec, mat) private (i, k)
-  // {
-  //   #pragma omp for schedule(static)
-    for (i = 0; i < 3; i++) {
-      prod[i] = 0.0;
-      for (int k = 0; k < 3; k++) {
-        prod[i] += vec[k] * mat[k][i];
-      }
-    }
-  // }
-  
-  return; 
-}
-
 /* Run simulation */
 void BFS(long double P[P_SIZE][5], long int index, int swtch, long int *index2) {
 
@@ -196,19 +143,14 @@ void BFS(long double P[P_SIZE][5], long int index, int swtch, long int *index2) 
     return;
   }
 
-  /* transition rates */
-
-  /* Initialize the array to store positions (llocs), which level - hexagonal
-  % or cubic we are on - (k) and charge state (chg) */ 
-  
   int i, ij;
   // new index
   int n_index;
 
   if (swtch == 0 || swtch == 2) {
-    #pragma omp parallel shared(vec1, P) private(ij)
-    {
-      #pragma omp parallel for schedule(static)
+    // #pragma omp parallel shared(vec1, P) private(ij)
+    // {
+    //   #pragma omp parallel for schedule(static)
       for (ij = 1; ij < 13; ij++) {
 
         n_index = 12*index + ij;
@@ -240,13 +182,13 @@ void BFS(long double P[P_SIZE][5], long int index, int swtch, long int *index2) 
           BFS(P, n_index, (swtch+1)%4,index2);
         }
       }
-    }
+    // }
   }
 
   else if (swtch == 1 || swtch == 3) {
-    #pragma omp parallel shared(vec1, P) private(ij)
-    {
-      #pragma omp parallel for schedule(static)
+    // #pragma omp parallel shared(vec1, P) private(ij)
+    // {
+    //   #pragma omp parallel for schedule(static)
       for (ij = 1; ij < 13; ij++) {
         
         n_index = 12*index + ij;
@@ -278,7 +220,7 @@ void BFS(long double P[P_SIZE][5], long int index, int swtch, long int *index2) 
   	      BFS(P, n_index, (swtch+1)%4,index2);
   	    }
   	  }
-    }
+    // }
   }
   return;
 } 
@@ -388,13 +330,21 @@ int main(int argc, char** argv) {
   memcpy(&Q2, &Q22, sizeof(r11));
       
 
+  r1 = v*exp(-E_1_l/kb/T);
+  r2 = v*exp(-E_4_l/kb/T);
+  r3 = v*exp(-E_1_4/kb/T);
+  r4 = v*exp(-E_3_4/kb/T);
+  r5 = v*exp(-E_c/kb/T);
+
+  Q1 = 6*r1+3*r3+3*r4+4*r5;
+  Q2 = 6*r2+3*r3+3*r4+4*r5;
+
   // initializes all elements to 0
   for (i = 0; i < P_SIZE; i++) {
     for (j = 0; j < 5; j++) {
       P[i][j] = 0.0;
       P2[i][j] = 0.0;
     }
-    checker[i] = 0;
   }
 
   /* Intializes random number generator */
@@ -406,7 +356,7 @@ int main(int argc, char** argv) {
 
   printf("%Lf\n", P[0][4]);
 
-  BFS(P, 0, 0,&index2);
+  BFS(P, 0, 0, &index2);
   printf("%ld\n",index2);
   for (i = 0; i < P_SIZE; i++) {
     P2[i][0] = P[i][0];

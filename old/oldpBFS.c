@@ -71,6 +71,89 @@ void mat_mul(long double prod[3][3], long double mat1[3][3], long double mat2[3]
   return; 
 }
 
+// // this version tries repeated exponentiation
+// void mat_pow (long double prod[3][3], long double mat[3][3], int power) {
+//   int i, j, k;
+
+//   // set to identity matrix
+//   for (i = 0; i < 3; i++) {
+//     for (j = 0; j < 3; j++) {
+//       if (i == j) {
+//         prod[i][j] = 1.0;
+//       }
+//       else {
+//         prod[i][j] = 0.0;
+//       }
+//     }
+//   }
+
+//   if (power == 0) {
+//     return;  
+//   }
+//   // repeated exponentiation
+//   else {
+//     long double temp[3][3];
+//     while (power != 0) {
+//       if (power % 2 == 1) {
+//         mat_mul(temp, prod, mat);
+//         for (i = 0; i < 3; i++) {
+//           memcpy(&prod[i], &temp[i], sizeof(temp[0]));
+//         }
+//       }
+      
+//       power = power >> 1;
+      
+//       if (power == 0) {
+//         break;
+//       }
+
+//       mat_mul(temp, mat, mat);
+//       for (i = 0; i < 3; i++) {
+//         memcpy(&mat[i], &temp[i], sizeof(temp[0]));
+//       }
+//     }
+//   }
+
+//   return;
+// }
+
+// void mat_vec_mul(long double prod[3], long double vec[3], long double mat[3][3]) {
+//   int i, k;
+  
+//   // #pragma omp parallel shared(prod, vec, mat) private (i, k)
+//   // {
+//   //   #pragma omp for schedule(static)
+//     for (i = 0; i < 3; i++) {
+//       prod[i] = 0.0;
+//       for (int k = 0; k < 3; k++) {
+//         prod[i] += vec[k] * mat[k][i];
+//       }
+//     }
+//   // }
+  
+//   return; 
+// }
+
+// mat0 is product, mat1, mat2 are things to be multiplied
+// void mat_mul(long double prod[3][3], long double mat1[3][3], long double mat2[3][3]) {
+//   int i, j, k;
+
+//   // #pragma omp parallel shared(prod, mat1, mat2) private(i, j, k)
+//   // {
+//   //   #pragma omp for schedule(static)
+//     for (i = 0; i < 3; i++) {
+//       for (j = 0; j < 3; j++) {
+//         prod[i][j] = 0.0;
+//         for (k = 0; k < 3; k++) {
+//           prod[i][j] += mat1[i][k] * mat2[k][j];
+//         }
+//       }
+//     }
+//   // }
+
+//   return; 
+// }
+
 // mat0 stores the product, mat2 is the thing to be exponentiated
 void mat_pow(long double mat0[3][3], long double mat2[3][3], int power) {
   long double mat1[3][3];
