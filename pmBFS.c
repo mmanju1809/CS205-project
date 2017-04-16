@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <omp.h>
 
-#define N 2
+#define N 3
 #define P_SIZE ((int) (pow(12, N+1)-1)/11)
 
 /* Barriers */
@@ -141,36 +141,39 @@ void mat_vec_mul(long double prod[3], long double vec[3], long double mat[3][3])
 }
 
 /* Run simulation */
-// why use the pointer *ii here?
+// A[i][j] keeps track of allowable transitions between i and j
 void BFS(long double A[P_SIZE][P_SIZE][5], long double P[P_SIZE][6], long int *ii) {
   long int lower, upper, i, j;
-  // #pragma omp parallel shared(A,P) private(i)
+  // #pragma omp parallel shared(A, P) private(i)
   // {
   //   #pragma omp parallel for schedule(static)
+    // iterate over every particle in the lattice
     for (i = 0; i < P_SIZE; i++) {
-      /*
-      Why use this ternary operation here? At any point where
-      i >= (P_SIZE - 1)/12, the loop breaks out and moves on...
-      so it looks like we are doing around 11*P_SIZE/12 extraneous
-      runs through the loop.
-      */
+      // lower bound of particles we can move to
       lower = ((12*i+1) < P_SIZE) ? (12*i+1) : P_SIZE;
       if (lower == P_SIZE) {
 	      break;
 	    }
+      // upper bound of 12 particles we can move to
       upper = ((12*i+13) <= P_SIZE) ? (12*i+13) : P_SIZE;
+      // iterate through the 12 possible lattice movements
       for (j = lower; j < upper; j++) {
 	      if (P[i][5] == 1.0) {
+          // [0] is x position
   	      P[j][0] = A[i][j][0]+P[i][0];
+          // [5] keeps track of where we visited
   	      P[j][5] = 1.0;
   	      *ii = *ii+1;
   	      if ((j % 12) == 0) {
   		      P[i][5] += 1.0;
   		    }
+          // [1] is y position
   	      P[j][1] = A[i][j][1]+P[i][1];
+          // [2] is z position
   	      P[j][2] = A[i][j][2]+P[i][2];
+          // [3] is time
   	      P[j][3] = A[i][j][3]+P[i][3];
-          // should this be * and not +?
+          // [4] is probability
   	      P[j][4] = A[i][j][4]*P[i][4];
   	    }
   	  }
@@ -200,7 +203,10 @@ int main(int argc, char** argv) {
   long double vec2[3];
   long int n_index;
 
+  // transition rates
+  // starting from cubic site
   Q1 = 6.*r1+3.*r3+3.*r4+4.*r5;
+  // starting from hexagonal site
   Q2 = 6.*r2+3.*r3+3.*r4+4.*r5;
 
   P = malloc(P_SIZE * sizeof(long double[6]));
@@ -214,24 +220,33 @@ int main(int argc, char** argv) {
   swtcher = malloc(P_SIZE * sizeof(int));
   
   // can't individually place after initialization
+  // lattice vector
   long double cell2_duplicate[3][3] = {
             {nnd, 0*a, 0*a},
             {-nnd/2,nnd/2*sqrt(3), 0*a},
             {0*1.0, 0*1.0, 10.086*c*nnd/3.078*a/2.57218587467527*2.51866888630220}
           };
-
+  // in plane vector
+  // out of plane vector 1 is down
+  // out of plane vector 2 is up
+  // 6 for 60 degrees
   for (i = 0; i < 6; i++) {
     for (j = 0; j < 3 ; j++) {
 	    vec1[j] = cell2_duplicate[0][j];
 	  }
+    // doing in plane rotation
     mat_pow(rotmf, rotm1, i);
+    // multiply by rot matrix to get rotated lattice vector
     mat_vec_mul(vec2, vec1, rotmf);
     for (j = 0; j < 3; j++) {
       ipvec[i][j] = vec2[j];
     }
   }
+  // o.o.p transitions
   for (k = 0; k < 4; k++) {
     for (i = 0; i < 3; i++) {
+
+      // remove duplicated vec1
       for (j = 0; j < 3; j++) {
         vec1[j] = spos_Si[k][j] - spos_Si[k+1][j];
       }
@@ -263,7 +278,9 @@ int main(int argc, char** argv) {
 
   // initializes all elements to 0
   for (i = 0; i < P_SIZE; i++) {
+    // prevents duplicating probabilities
     checker[i] = 0;
+    // keeps track of what level you're at
     swtcher[i] = 0;
   }
 
@@ -277,6 +294,7 @@ int main(int argc, char** argv) {
     		  i = P_SIZE;
     		  break;
     		}
+        // in plane
 	      if (k < 6) {
     		  for (j = 0; j < 3; j++) {
 		        A[i][n_index][j] = ipvec[k][j];
@@ -284,6 +302,7 @@ int main(int argc, char** argv) {
     		  A[i][n_index][4] = r1/Q1;
     		  A[i][n_index][3] = 1/Q1;
 		    }
+        // below plane
 	      else if (k < 9) {
     		  for (j = 0; j < 3; j++) {
   		      A[i][n_index][j] = opvec1[swtcher[i]][k-6][j];
@@ -292,6 +311,7 @@ int main(int argc, char** argv) {
     		  A[i][n_index][3] = 1/Q1;
     		  swtcher[n_index] = (swtcher[i]+3)%4;
 		    }
+        // above plane
 	      else {
     		  for (j = 0; j < 3; j++) {
 	  	      A[i][n_index][j] = opvec2[swtcher[i]][k-9][j];

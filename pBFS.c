@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <omp.h>
 
-#define N 2
+#define N 3
 #define P_SIZE ((int) (pow(12, N+1)-1)/11)
 
 /* Barriers */
