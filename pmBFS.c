@@ -13,7 +13,7 @@ long double E_1_l = 2.951646;
 long double E_4_l = -3590.207247+3592.956166;
 long double E_1_4 = -3589.95316882+3592.97102056;
 long double E_3_4 = -3589.37845071+3592.97101757;
-long double E_c = 3.067482; 
+long double E_c =  2.492666; //3.067482; 
 
 /* Boltzmann constant */
 long double kb = 8.6173324e-5;
@@ -205,9 +205,9 @@ int main(int argc, char** argv) {
 
   // transition rates
   // starting from cubic site
-  Q1 = 6.*r1+3.*r3+3.*r4+4.*r5;
+  Q1 = 6.*r1+3.*r3+3.*r4+3.*r5;
   // starting from hexagonal site
-  Q2 = 6.*r2+3.*r3+3.*r4+4.*r5;
+  Q2 = 6.*r2+3.*r3+3.*r4+3.*r5;
 
   P = malloc(P_SIZE * sizeof(long double[6]));
   P2 = malloc(P_SIZE * sizeof(long double[5]));
@@ -303,7 +303,7 @@ int main(int argc, char** argv) {
   		        A[i][n_index][j] = ipvec[k][j];
   		      }
       		  A[i][n_index][4] = r1/Q1;
-      		  A[i][n_index][3] = 1/Q1;
+      		  A[i][n_index][3] = 1./Q1;
   		    }
           // below plane
   	      else if (k < 9) {
@@ -311,7 +311,7 @@ int main(int argc, char** argv) {
     		      A[i][n_index][j] = opvec1[swtcher[i]][k-6][j];
     		    }
       		  A[i][n_index][4] = r3/Q1;
-      		  A[i][n_index][3] = 1/Q1;
+      		  A[i][n_index][3] = 1./Q1;
       		  swtcher[n_index] = (swtcher[i]+3)%4;
   		    }
           // above plane
@@ -320,7 +320,7 @@ int main(int argc, char** argv) {
   	  	      A[i][n_index][j] = opvec2[swtcher[i]][k-9][j];
   		      }
       		  A[i][n_index][4] = r4/Q1;
-      		  A[i][n_index][3] = 1/Q1;
+      		  A[i][n_index][3] = 1./Q1;
       		  swtcher[n_index] = (swtcher[i]+1)%4;
   	    	}
   	    }
@@ -337,14 +337,14 @@ int main(int argc, char** argv) {
   	          A[i][n_index][j] = ipvec[k][j];
   	        }
       		  A[i][n_index][4] = r2/Q2;
-      		  A[i][n_index][3] = 1/Q2;
+      		  A[i][n_index][3] = 1./Q2;
       		}
           else if (k < 9) {
   	        for (j = 0; j < 3; j++) {
     		      A[i][n_index][j] = opvec1[swtcher[i]][k-6][j];
     		    }
       		  A[i][n_index][4] = r4/Q2;
-      		  A[i][n_index][3] = 1/Q2;
+      		  A[i][n_index][3] = 1./Q2;
       		  swtcher[n_index] = (swtcher[i]+3)%4;
   	      }
           else {
@@ -352,7 +352,7 @@ int main(int argc, char** argv) {
     		      A[i][n_index][j] = opvec2[swtcher[i]][k-9][j];
     		    }
       		  A[i][n_index][4] = r3/Q2;
-      		  A[i][n_index][3] = 1/Q2;
+      		  A[i][n_index][3] = 1./Q2;
       		  swtcher[n_index] = (swtcher[i]+1)%4;
   	      }
         }
@@ -380,7 +380,9 @@ int main(int argc, char** argv) {
     P2[i][2] = P[i][2];
     P2[i][3] = P[i][3];
     P2[i][4] = 0.0;
-
+#pragma omp parallel shared(P2, P,i) private(j)
+    {
+#pragma omp parallel for schedule(static)
     for (j = i; j < P_SIZE; j++) {
       if (((checker[j] == 0 && fabsl(P[j][0] - P[i][0]) < 0.0000001) &&
           (fabsl(P[j][1] - P[i][1]) < 0.0000001 && fabsl(P[j][2] - P[i][2]) < 0.0000001)) &&
@@ -389,9 +391,8 @@ int main(int argc, char** argv) {
 	      checker[j] = 1;
 	    }
     }
-  }
+    }
 
-  for (i = 0; i < P_SIZE; i++) {
     if (P2[i][4] > 0.0) {
   	  printf("%Lf %Lf %Lf %Lf %.11Lf\n", P2[i][0], P2[i][1], P2[i][2], P2[i][3], P2[i][4]);
   	}
