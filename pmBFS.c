@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <omp.h>
 
-#define N 3
+#define N 1
 #define P_SIZE ((int) (pow(12, N+1)-1)/11)
 
 /* Barriers */
@@ -144,16 +144,16 @@ void mat_vec_mul(long double prod[3], long double vec[3], long double mat[3][3])
 // A[i][j] keeps track of allowable transitions between i and j
 void BFS(long double A[P_SIZE][P_SIZE][5], long double P[P_SIZE][6], long int *ii) {
   long int lower, upper, i, j;
-  // #pragma omp parallel shared(A, P) private(i)
-  // {
-  //   #pragma omp parallel for schedule(static)
+  #pragma omp parallel shared(A, P) private(i)
+  {
+    #pragma omp parallel for schedule(static)
     // iterate over every particle in the lattice
-    for (i = 0; i < P_SIZE; i++) {
+    for (i = 0; i < (P_SIZE / 12); i++) {
       // lower bound of particles we can move to
       lower = ((12*i+1) < P_SIZE) ? (12*i+1) : P_SIZE;
-      if (lower == P_SIZE) {
-	      break;
-	    }
+     //  if (lower == P_SIZE) {
+	    //   break;
+	    // }
       // upper bound of 12 particles we can move to
       upper = ((12*i+13) <= P_SIZE) ? (12*i+13) : P_SIZE;
       // iterate through the 12 possible lattice movements
@@ -178,7 +178,7 @@ void BFS(long double A[P_SIZE][P_SIZE][5], long double P[P_SIZE][6], long int *i
   	    }
   	  }
     }
-  // }
+  }
 }
  
  
@@ -286,72 +286,76 @@ int main(int argc, char** argv) {
 
   printf("%Lf\n", P[0][4]);
 
-  for (i = 0; i < P_SIZE; i++) {
-    if (swtcher[i] == 0 || swtcher[i] == 2) {
-      for (k = 0; k < 12; k++) {
-	      n_index = 12*i+k+1;
-	      if (n_index >= P_SIZE) {
-    		  i = P_SIZE;
-    		  break;
-    		}
-        // in plane
-	      if (k < 6) {
-    		  for (j = 0; j < 3; j++) {
-		        A[i][n_index][j] = ipvec[k][j];
-		      }
-    		  A[i][n_index][4] = r1/Q1;
-    		  A[i][n_index][3] = 1/Q1;
-		    }
-        // below plane
-	      else if (k < 9) {
-    		  for (j = 0; j < 3; j++) {
-  		      A[i][n_index][j] = opvec1[swtcher[i]][k-6][j];
+  #pragma omp parallel shared(A, swtcher) private(i, j, k)
+  {
+    #pragma omp parallel for schedule(static)
+    for (i = 0; i < P_SIZE; i++) {
+      if (swtcher[i] == 0 || swtcher[i] == 2) {
+        for (k = 0; k < 12; k++) {
+  	      n_index = 12*i+k+1;
+  	      if (n_index >= P_SIZE) {
+      		  i = P_SIZE;
+      		  break;
+      		}
+          // in plane
+  	      if (k < 6) {
+      		  for (j = 0; j < 3; j++) {
+  		        A[i][n_index][j] = ipvec[k][j];
+  		      }
+      		  A[i][n_index][4] = r1/Q1;
+      		  A[i][n_index][3] = 1/Q1;
   		    }
-    		  A[i][n_index][4] = r3/Q1;
-    		  A[i][n_index][3] = 1/Q1;
-    		  swtcher[n_index] = (swtcher[i]+3)%4;
-		    }
-        // above plane
-	      else {
-    		  for (j = 0; j < 3; j++) {
-	  	      A[i][n_index][j] = opvec2[swtcher[i]][k-9][j];
-		      }
-    		  A[i][n_index][4] = r4/Q1;
-    		  A[i][n_index][3] = 1/Q1;
-    		  swtcher[n_index] = (swtcher[i]+1)%4;
-	    	}
-	    }
-    }
-    else {
-      for (k = 0; k < 12; k++) {
-	      n_index = 12*i+k+1;
-        if (n_index >= P_SIZE) {
-    		  i = P_SIZE;
-	        break;
-	      } 
-        if (k < 6) {
-      	  for (j = 0; j < 3; j++) {
-	          A[i][n_index][j] = ipvec[k][j];
-	        }
-    		  A[i][n_index][4] = r2/Q2;
-    		  A[i][n_index][3] = 1/Q2;
-    		}
-        else if (k < 9) {
-	        for (j = 0; j < 3; j++) {
-  		      A[i][n_index][j] = opvec1[swtcher[i]][k-6][j];
+          // below plane
+  	      else if (k < 9) {
+      		  for (j = 0; j < 3; j++) {
+    		      A[i][n_index][j] = opvec1[swtcher[i]][k-6][j];
+    		    }
+      		  A[i][n_index][4] = r3/Q1;
+      		  A[i][n_index][3] = 1/Q1;
+      		  swtcher[n_index] = (swtcher[i]+3)%4;
   		    }
-    		  A[i][n_index][4] = r4/Q2;
-    		  A[i][n_index][3] = 1/Q2;
-    		  swtcher[n_index] = (swtcher[i]+3)%4;
-	      }
-        else {
-      	  for (j = 0; j < 3; j++) {
-  		      A[i][n_index][j] = opvec2[swtcher[i]][k-9][j];
-  		    }
-    		  A[i][n_index][4] = r3/Q2;
-    		  A[i][n_index][3] = 1/Q2;
-    		  swtcher[n_index] = (swtcher[i]+1)%4;
-	      }
+          // above plane
+  	      else {
+      		  for (j = 0; j < 3; j++) {
+  	  	      A[i][n_index][j] = opvec2[swtcher[i]][k-9][j];
+  		      }
+      		  A[i][n_index][4] = r4/Q1;
+      		  A[i][n_index][3] = 1/Q1;
+      		  swtcher[n_index] = (swtcher[i]+1)%4;
+  	    	}
+  	    }
+      }
+      else {
+        for (k = 0; k < 12; k++) {
+  	      n_index = 12*i+k+1;
+          if (n_index >= P_SIZE) {
+      		  i = P_SIZE;
+  	        break;
+  	      } 
+          if (k < 6) {
+        	  for (j = 0; j < 3; j++) {
+  	          A[i][n_index][j] = ipvec[k][j];
+  	        }
+      		  A[i][n_index][4] = r2/Q2;
+      		  A[i][n_index][3] = 1/Q2;
+      		}
+          else if (k < 9) {
+  	        for (j = 0; j < 3; j++) {
+    		      A[i][n_index][j] = opvec1[swtcher[i]][k-6][j];
+    		    }
+      		  A[i][n_index][4] = r4/Q2;
+      		  A[i][n_index][3] = 1/Q2;
+      		  swtcher[n_index] = (swtcher[i]+3)%4;
+  	      }
+          else {
+        	  for (j = 0; j < 3; j++) {
+    		      A[i][n_index][j] = opvec2[swtcher[i]][k-9][j];
+    		    }
+      		  A[i][n_index][4] = r3/Q2;
+      		  A[i][n_index][3] = 1/Q2;
+      		  swtcher[n_index] = (swtcher[i]+1)%4;
+  	      }
+        }
       }
     }
   }

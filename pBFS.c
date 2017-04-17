@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <omp.h>
 
-#define N 3
+#define N 1
 #define P_SIZE ((int) (pow(12, N+1)-1)/11)
 
 /* Barriers */
@@ -226,7 +226,7 @@ void BFS(long double P[P_SIZE][5], long int index, int swtch, long int *index2) 
 } 
  
 int main(int argc, char** argv) {
-  omp_set_num_threads(4);
+  // omp_set_num_threads(1);
   
   clock_t start = clock();
 
@@ -358,26 +358,30 @@ int main(int argc, char** argv) {
 
   BFS(P, 0, 0, &index2);
   printf("%ld\n",index2);
-  for (i = 0; i < P_SIZE; i++) {
-    P2[i][0] = P[i][0];
-    P2[i][1] = P[i][1];
-    P2[i][2] = P[i][2];
-    P2[i][3] = P[i][3];
-      
-    for (j = i; j < P_SIZE; j++) {
-      if (((checker[j] == 0 && fabsl(P[j][0] - P[i][0])<0.0000001) &&
-	   (fabsl(P[j][1] - P[i][1])<0.0000001 && fabsl(P[j][2] - P[i][2])<0.0000001)) &&
-          (fabsl(P[j][3] - P[i][3])<0.0000001)) {
-  	      P2[i][4] += P[j][4];
-  	      checker[j] = 1;
+  #pragma omp parallel shared(P2, P) private(i, j)
+  {
+    #pragma omp parallel for schedule(static)
+    for (i = 0; i < P_SIZE; i++) {
+      P2[i][0] = P[i][0];
+      P2[i][1] = P[i][1];
+      P2[i][2] = P[i][2];
+      P2[i][3] = P[i][3];
+        
+      for (j = i; j < P_SIZE; j++) {
+        if (((checker[j] == 0 && fabsl(P[j][0] - P[i][0])<0.0000001) &&
+  	   (fabsl(P[j][1] - P[i][1])<0.0000001 && fabsl(P[j][2] - P[i][2])<0.0000001)) &&
+            (fabsl(P[j][3] - P[i][3])<0.0000001)) {
+    	      P2[i][4] += P[j][4];
+    	      checker[j] = 1;
+    	  }
   	  }
-	  }
-     }
+       }
 
-  for (i = 0; i < P_SIZE; i++) {
-    if (P2[i][4] > 0.0) {
-  	  printf("%Lf %Lf %Lf %Lf %.11Lf\n", P2[i][0], P2[i][1], P2[i][2], P2[i][3], P2[i][4]);
-  	}
+    for (i = 0; i < P_SIZE; i++) {
+      if (P2[i][4] > 0.0) {
+    	  printf("%Lf %Lf %Lf %Lf %.11Lf\n", P2[i][0], P2[i][1], P2[i][2], P2[i][3], P2[i][4]);
+    	}
+    }
   }
 
   printf("\n%f\n", (clock() - start)/(CLOCKS_PER_SEC/1000.0));

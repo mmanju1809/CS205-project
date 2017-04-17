@@ -13,8 +13,7 @@
     </head>
     <body>
         <div class="wrapper">
-            <h1>CS 205 Final Project</h1>
-            <h2>Mapping out Trajectories of Charged Defects</h2>
+            <h1>Mapping out Trajectories of Charged Defects</h1>
             <h4>Rodrick Kuate Defo, Richard Wang</h4>
             <h4>Professor Manju Manjunathaiah</h4>
 
@@ -77,6 +76,54 @@
 
             where $\Gamma$ is the gamma function and $_{2}\tilde{F}_{1}$ is the regularized version of the hypergeometric function $_{2}F_{1}$.
             </p>
+
+            <hr/>
+
+            <h3>Interim Report</h3>
+            <p>We were able to successfully get results for $N=4$, implying that we were able to successfully run BFS on a 12-ary tree with a depth of 4.</p>
+            <div class="figure-wrapper">
+                <div class="centered">
+                    <div class="caption">
+                        <img width="400" src="../images/2d%20random%20walk.gif">
+                        <p>Figure I: 2-d random walk</p>
+                    </div>
+                    <div class="caption">
+                        <img width="400" src="../images/probability%20map.gif">
+                        <p>Figure II: preprocessed probability map $(xy)$</p>
+                    </div>
+                </div>
+                <hr/>
+                <div class="centered">
+                    <div class="caption">
+                        <img width="400" src="../images/xy.gif">
+                        <p>Figure III: averaged probability map $(xy)$</p>
+                    </div>
+                    <div class="caption">
+                        <img width="400" src="../images/xz.gif">
+                        <p>Figure IV: averaged probability map $(xz)$</p>
+                    </div>
+                </div>
+                <hr/>
+                <div class="centered">
+                    <div class="caption">
+                        <img width="400" src="../images/efficiency.png">
+                        <p>Figure V: efficiency</p>
+                    </div>
+                    <div class="caption">
+                        <img width="400" src="../images/speedup.png">
+                        <p>Figure VI: speedup</p>
+                    </div>
+                    <div class="caption">
+                        <img width="400" src="../images/throughput.png">
+                        <p>Figure VII: throughput</p>
+                    </div>
+                </div>
+            </div>
+            <p>We initially ran BFS in the lattice with a recursive call, meaning we would traverse from one particle in the lattice to another, run BFS on the newly discovered particle, and so on. We were able to get some speedup on this initial model by adding an OpenMP for loop pragma to an area where we calculated cumulative probability of transitions. Additionally, we were able to get speedup by hand-unrolling the matrix-matrix and matrix-vector multiplications we were performing.</p>
+
+            <p>The .gifs were obtained by calculating the probability map for a system size of $\frac{12^{6}-1}{11}$ different pathways. Figure II shows the preprocessed data for the transitions that were calculated. Figures III and IV show the same data, except averaged over the two types of transitions.</p>
+
+            <p>We are currently working towards moving to using a semiring model for BFS, as we were able to transform the recursive call of BFS into a serial call. Our semiring will be analogous to the ring $([0, \infty], +, \times)$.</p>
 
             <hr/>
 
