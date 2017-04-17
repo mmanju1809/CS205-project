@@ -358,15 +358,15 @@ int main(int argc, char** argv) {
 
   BFS(P, 0, 0, &index2);
   printf("%ld\n",index2);
-  #pragma omp parallel shared(P2, P) private(i, j)
-  {
-    #pragma omp parallel for schedule(static)
     for (i = 0; i < P_SIZE; i++) {
       P2[i][0] = P[i][0];
       P2[i][1] = P[i][1];
       P2[i][2] = P[i][2];
       P2[i][3] = P[i][3];
         
+#pragma omp parallel shared(P2, P,i) private(j)
+  {
+    #pragma omp parallel for schedule(static)
       for (j = i; j < P_SIZE; j++) {
         if (((checker[j] == 0 && fabsl(P[j][0] - P[i][0])<0.0000001) &&
   	   (fabsl(P[j][1] - P[i][1])<0.0000001 && fabsl(P[j][2] - P[i][2])<0.0000001)) &&
@@ -374,16 +374,14 @@ int main(int argc, char** argv) {
     	      P2[i][4] += P[j][4];
     	      checker[j] = 1;
     	  }
-  	  }
-       }
-
-    for (i = 0; i < P_SIZE; i++) {
-      if (P2[i][4] > 0.0) {
-    	  printf("%Lf %Lf %Lf %Lf %.11Lf\n", P2[i][0], P2[i][1], P2[i][2], P2[i][3], P2[i][4]);
-    	}
-    }
+      }
   }
-
+  if (P2[i][4] > 0.0) {
+    printf("%Lf %Lf %Lf %Lf %.11Lf\n", P2[i][0], P2[i][1], P2[i][2], P2[i][3], P2[i][4]);
+  }
+    
+    }
+    
   printf("\n%f\n", (clock() - start)/(CLOCKS_PER_SEC/1000.0));
 
   free(P);
