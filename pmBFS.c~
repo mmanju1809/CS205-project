@@ -4,8 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
+//#include "timer.h"
 
-#define N 1
+#define N 5
 #define P_SIZE ((int) (pow(12, N+1)-1)/11)
 
 /* Barriers */
@@ -13,7 +14,7 @@ long double E_1_l = 2.951646;
 long double E_4_l = -3590.207247+3592.956166;
 long double E_1_4 = -3589.95316882+3592.97102056;
 long double E_3_4 = -3589.37845071+3592.97101757;
-long double E_c = 3.067482; 
+long double E_c =  2.492666; //3.067482; 
 
 /* Boltzmann constant */
 long double kb = 8.6173324e-5;
@@ -142,9 +143,10 @@ void mat_vec_mul(long double prod[3], long double vec[3], long double mat[3][3])
 
 /* Run simulation */
 // A[i][j] keeps track of allowable transitions between i and j
-void BFS(long double A[P_SIZE][P_SIZE][5], long double P[P_SIZE][6], long int *ii) {
+void BFS(long double A[P_SIZE][5], long double P[P_SIZE][6]) {
+  omp_set_num_threads(91);
   long int lower, upper, i, j;
-  #pragma omp parallel shared(A, P) private(i)
+#pragma omp parallel shared(A, P) private(i,j)
   {
     #pragma omp parallel for schedule(static)
     // iterate over every particle in the lattice
@@ -160,21 +162,21 @@ void BFS(long double A[P_SIZE][P_SIZE][5], long double P[P_SIZE][6], long int *i
       for (j = lower; j < upper; j++) {
 	      if (P[i][5] == 1.0) {
           // [0] is x position
-  	      P[j][0] = A[i][j][0]+P[i][0];
+  	      P[j][0] = A[j][0]+P[i][0];
           // [5] keeps track of where we visited
   	      P[j][5] = 1.0;
-  	      *ii = *ii+1;
+	      //   *ii = *ii+1;
   	      if ((j % 12) == 0) {
   		      P[i][5] += 1.0;
   		    }
           // [1] is y position
-  	      P[j][1] = A[i][j][1]+P[i][1];
+  	      P[j][1] = A[j][1]+P[i][1];
           // [2] is z position
-  	      P[j][2] = A[i][j][2]+P[i][2];
+  	      P[j][2] = A[j][2]+P[i][2];
           // [3] is time
-  	      P[j][3] = A[i][j][3]+P[i][3];
+  	      P[j][3] = A[j][3]+P[i][3];
           // [4] is probability
-  	      P[j][4] = A[i][j][4]*P[i][4];
+  	      P[j][4] = A[j][4]*P[i][4];
   	    }
   	  }
     }
@@ -183,36 +185,35 @@ void BFS(long double A[P_SIZE][P_SIZE][5], long double P[P_SIZE][6], long int *i
  
  
 int main(int argc, char** argv) {
-  omp_set_num_threads(4);
   
-  clock_t start = clock();
+  time_t start = time(NULL);
+  time_t end;
   long double r1 = v*exp(-E_1_l/kb/T);
   long double r2 = v*exp(-E_4_l/kb/T);
   long double r3 = v*exp(-E_1_4/kb/T);
   long double r4 = v*exp(-E_3_4/kb/T);
   long double r5 = v*exp(-E_c/kb/T);
   long double Q1, Q2;
-  long int i, j, k, ii;
+  long int i, j, k;
 
   long double (*P)[6];
   long double (*P2)[5];
-  long double (*A)[P_SIZE][5];
+  long double (*A)[5];
   long double rotmf[3][3];
   long double mf[3][3];
   long double vec1[3];
   long double vec2[3];
   long int n_index;
-
+  //StartTimer();
   // transition rates
   // starting from cubic site
-  Q1 = 6.*r1+3.*r3+3.*r4+4.*r5;
+  Q1 = 6.*r1+3.*r3+3.*r4+3.*r5;
   // starting from hexagonal site
-  Q2 = 6.*r2+3.*r3+3.*r4+4.*r5;
-
+  Q2 = 6.*r2+3.*r3+3.*r4+3.*r5;
+  
   P = malloc(P_SIZE * sizeof(long double[6]));
   P2 = malloc(P_SIZE * sizeof(long double[5]));
-  A = malloc(P_SIZE * sizeof(long double[P_SIZE][5]));
-
+  A = malloc(P_SIZE * sizeof(long double[5]));
   int *checker;
   int *swtcher;
   
@@ -285,7 +286,8 @@ int main(int argc, char** argv) {
   }
 
   printf("%Lf\n", P[0][4]);
-
+  omp_set_num_threads(91);
+  
   #pragma omp parallel shared(A, swtcher) private(i, j, k)
   {
     #pragma omp parallel for schedule(static)
@@ -300,27 +302,27 @@ int main(int argc, char** argv) {
           // in plane
   	      if (k < 6) {
       		  for (j = 0; j < 3; j++) {
-  		        A[i][n_index][j] = ipvec[k][j];
+  		        A[n_index][j] = ipvec[k][j];
   		      }
-      		  A[i][n_index][4] = r1/Q1;
-      		  A[i][n_index][3] = 1/Q1;
+      		  A[n_index][4] = r1/Q1;
+      		  A[n_index][3] = 1./Q1;
   		    }
           // below plane
   	      else if (k < 9) {
       		  for (j = 0; j < 3; j++) {
-    		      A[i][n_index][j] = opvec1[swtcher[i]][k-6][j];
+    		      A[n_index][j] = opvec1[swtcher[i]][k-6][j];
     		    }
-      		  A[i][n_index][4] = r3/Q1;
-      		  A[i][n_index][3] = 1/Q1;
+      		  A[n_index][4] = r3/Q1;
+      		  A[n_index][3] = 1./Q1;
       		  swtcher[n_index] = (swtcher[i]+3)%4;
   		    }
           // above plane
   	      else {
       		  for (j = 0; j < 3; j++) {
-  	  	      A[i][n_index][j] = opvec2[swtcher[i]][k-9][j];
+  	  	      A[n_index][j] = opvec2[swtcher[i]][k-9][j];
   		      }
-      		  A[i][n_index][4] = r4/Q1;
-      		  A[i][n_index][3] = 1/Q1;
+      		  A[n_index][4] = r4/Q1;
+      		  A[n_index][3] = 1./Q1;
       		  swtcher[n_index] = (swtcher[i]+1)%4;
   	    	}
   	    }
@@ -334,25 +336,25 @@ int main(int argc, char** argv) {
   	      } 
           if (k < 6) {
         	  for (j = 0; j < 3; j++) {
-  	          A[i][n_index][j] = ipvec[k][j];
+  	          A[n_index][j] = ipvec[k][j];
   	        }
-      		  A[i][n_index][4] = r2/Q2;
-      		  A[i][n_index][3] = 1/Q2;
+      		  A[n_index][4] = r2/Q2;
+      		  A[n_index][3] = 1./Q2;
       		}
           else if (k < 9) {
   	        for (j = 0; j < 3; j++) {
-    		      A[i][n_index][j] = opvec1[swtcher[i]][k-6][j];
+    		      A[n_index][j] = opvec1[swtcher[i]][k-6][j];
     		    }
-      		  A[i][n_index][4] = r4/Q2;
-      		  A[i][n_index][3] = 1/Q2;
+      		  A[n_index][4] = r4/Q2;
+      		  A[n_index][3] = 1./Q2;
       		  swtcher[n_index] = (swtcher[i]+3)%4;
   	      }
           else {
         	  for (j = 0; j < 3; j++) {
-    		      A[i][n_index][j] = opvec2[swtcher[i]][k-9][j];
+    		      A[n_index][j] = opvec2[swtcher[i]][k-9][j];
     		    }
-      		  A[i][n_index][4] = r3/Q2;
-      		  A[i][n_index][3] = 1/Q2;
+      		  A[n_index][4] = r3/Q2;
+      		  A[n_index][3] = 1./Q2;
       		  swtcher[n_index] = (swtcher[i]+1)%4;
   	      }
         }
@@ -365,39 +367,43 @@ int main(int argc, char** argv) {
   P[0][3] = 0.0;
   P[0][4] = 1.0;
   P[0][5] = 1.0;
-  ii = 0;
+  //ii = 0;
   
   for (i = 0; i < N; i++) {
-    BFS(A, P, &ii);
+    BFS(A, P);
   }
   
-  printf("%ld\n",ii);
+  //printf("%ld\n",ii);
   n_index = N % 2;
   
+  long double sum;
   for (i = 0; i < P_SIZE; i++) {
     P2[i][0] = P[i][0];
     P2[i][1] = P[i][1];
     P2[i][2] = P[i][2];
     P2[i][3] = P[i][3];
     P2[i][4] = 0.0;
+    sum = 0.0;
 
+    omp_set_num_threads(91);
+#pragma omp parallel for default(shared) private(j) schedule(static) reduction(+:sum)
     for (j = i; j < P_SIZE; j++) {
-      if (((checker[j] == 0 && fabsl(P[j][0] - P[i][0]) < 0.0000001) &&
-          (fabsl(P[j][1] - P[i][1]) < 0.0000001 && fabsl(P[j][2] - P[i][2]) < 0.0000001)) &&
-          (fabsl(P[j][3] - P[i][3]) < 0.0000001)) {
-	      P2[i][4] += P[j][4];
-	      checker[j] = 1;
-	    }
+      if (((checker[j] == 0 && fabsl(P[j][0] - P[i][0])<0.0000001) &&
+	   (fabsl(P[j][1] - P[i][1])<0.0000001 && fabsl(P[j][2] - P[i][2])<0.0000001)) &&
+          (fabsl(P[j][3] - P[i][3])<0.0000001)) {
+  	      sum += P[j][4];
+  	      checker[j] = 1;
+  	  }
     }
+    P2[i][4] = sum;
   }
+  
+  //if (P2[i][4] > 0.0) {
+  //	  printf("%Lf %Lf %Lf %Lf %.11Lf\n", P2[i][0], P2[i][1], P2[i][2], P2[i][3], P2[i][4]);
+  //	}
 
-  for (i = 0; i < P_SIZE; i++) {
-    if (P2[i][4] > 0.0) {
-  	  printf("%Lf %Lf %Lf %Lf %.11Lf\n", P2[i][0], P2[i][1], P2[i][2], P2[i][3], P2[i][4]);
-  	}
-  }
-
-  printf("\n%f\n", (clock() - start)/(CLOCKS_PER_SEC/1000.0));
+  end = time(NULL);
+  printf("\n%Lf\n", (long double)(end-start));
 
   free(P);
   free(P2);

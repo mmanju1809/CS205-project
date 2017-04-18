@@ -150,7 +150,7 @@ void BFS(long double A[P_SIZE][5], long double P[P_SIZE][6]) {
   {
     #pragma omp parallel for schedule(static)
     // iterate over every particle in the lattice
-    for (i = 0; i < (P_SIZE / 12); i++) {
+    for (i = 0; i < (P_SIZE / 12.0); i++) {
       // lower bound of particles we can move to
       lower = ((12*i+1) < P_SIZE) ? (12*i+1) : P_SIZE;
      //  if (lower == P_SIZE) {
