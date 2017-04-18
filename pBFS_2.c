@@ -4,8 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
+//#include "timer.h"
 
-#define N 2
+#define N 5
 #define P_SIZE ((int) (pow(12, N+1)-1)/11)
 
 /* Barriers */
@@ -226,10 +227,12 @@ void BFS(long double P[P_SIZE][5], long int index, int swtch, long int *index2) 
 } 
  
 int main(int argc, char** argv) {
-  omp_set_num_threads(4);
+  omp_set_num_threads(91);
   
-  clock_t start = clock();
-
+  time_t start = time(NULL);
+  time_t end;
+  //long double end;
+  // StartTimer()
   int i, j,k;
 
   long double (*P)[5];
@@ -383,8 +386,8 @@ int main(int argc, char** argv) {
   	  printf("%Lf %Lf %Lf %Lf %.11Lf\n", P2[i][0], P2[i][1], P2[i][2], P2[i][3], P2[i][4]);
   	}
   }
-  
-  printf("\n%f\n", (clock() - start)/(CLOCKS_PER_SEC/1000.0));
+  end = time(NULL);
+  printf("\n%Lf\n", (long double)(end-start));
 
   free(P);
   free(P2);
