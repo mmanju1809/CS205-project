@@ -33,3 +33,19 @@ h3 {
 .wrapper {
     margin: 100px 250px 0 250px;
 }
+
+.figure-wrapper {
+    width: 100%;
+    text-align: center;
+}
+
+.caption {
+    width: 100%;
+    float: left;
+    display: inline-block;
+}
+
+.caption > p {
+    width: 400px;
+    display: inline-block;
+}
