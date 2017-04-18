@@ -5,7 +5,7 @@
 #include <omp.h>
 
 #define N 3
-#define num 5
+#define num ((int) (pow(12, N+1)-1)/11)
 
 // Energy barriers
 long double E_1_l = 2.951646;
