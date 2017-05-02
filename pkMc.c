@@ -198,7 +198,7 @@ int kMC(long double cell2[3][3], long double spos_Si[6][3], long double T,long d
   for(y = 1; y< N; y++)
     {
     t = 0;
-#pragma omp parallel shared(llocs,k,k2,chg) private(h)
+#pragma omp parallel shared(llocs,k,k2,chg,t) private(h)
     {
 #pragma omp parallel for schedule(static)
     for (h = 0; h< IT; h ++)
@@ -426,11 +426,7 @@ int kMC(long double cell2[3][3], long double spos_Si[6][3], long double T,long d
       {
 	break;
 	}*/
-    #pragma omp parallel for default(shared) private(h) schedule(static) reduction(+:tt)
-    for (h =0; h<IT; h++)
-      {
-	tt += t;
-      }
+    tt += t;
     if (tt>10)
       {
 	L = y;
