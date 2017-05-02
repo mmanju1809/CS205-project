@@ -6,7 +6,7 @@
 #include <omp.h>
 //#include "timer.h"
 
-#define N 5
+#define N 4
 #define P_SIZE ((int) (pow(12, N+1)-1)/11)
 
 /* Barriers */
@@ -144,11 +144,11 @@ void mat_vec_mul(long double prod[3], long double vec[3], long double mat[3][3])
 /* Run simulation */
 // A[i][j] keeps track of allowable transitions between i and j
 void BFS(long double A[P_SIZE][5], long double P[P_SIZE][6]) {
-  omp_set_num_threads(91);
+  // omp_set_num_threads(91);
   long int lower, upper, i, j;
-#pragma omp parallel shared(A, P) private(i,j)
-  {
-    #pragma omp parallel for schedule(static)
+// #pragma omp parallel shared(A, P) private(i,j)
+//   {
+//     #pragma omp parallel for schedule(static)
     // iterate over every particle in the lattice
     for (i = 0; i < (P_SIZE / 12.0); i++) {
       // lower bound of particles we can move to
@@ -180,7 +180,7 @@ void BFS(long double A[P_SIZE][5], long double P[P_SIZE][6]) {
   	    }
   	  }
     }
-  }
+  // }
 }
  
  
@@ -286,11 +286,11 @@ int main(int argc, char** argv) {
   }
 
   printf("%Lf\n", P[0][4]);
-  omp_set_num_threads(91);
+  // omp_set_num_threads(91);
   
-  #pragma omp parallel shared(A, swtcher) private(i, j, k)
-  {
-    #pragma omp parallel for schedule(static)
+  // #pragma omp parallel shared(A, swtcher) private(i, j, k)
+  // {
+  //   #pragma omp parallel for schedule(static)
     for (i = 0; i < P_SIZE; i++) {
       if (swtcher[i] == 0 || swtcher[i] == 2) {
         for (k = 0; k < 12; k++) {
@@ -359,7 +359,7 @@ int main(int argc, char** argv) {
   	      }
         }
       }
-    }
+    // }
   }
 
   P[0][1] = 0.0;
@@ -385,8 +385,8 @@ int main(int argc, char** argv) {
     P2[i][4] = 0.0;
     sum = 0.0;
 
-    omp_set_num_threads(91);
-#pragma omp parallel for default(shared) private(j) schedule(static) reduction(+:sum)
+    // omp_set_num_threads(91);
+// #pragma omp parallel for default(shared) private(j) schedule(static) reduction(+:sum)
     for (j = i; j < P_SIZE; j++) {
       if (((checker[j] == 0 && fabsl(P[j][0] - P[i][0])<0.0000001) &&
 	   (fabsl(P[j][1] - P[i][1])<0.0000001 && fabsl(P[j][2] - P[i][2])<0.0000001)) &&
@@ -398,9 +398,9 @@ int main(int argc, char** argv) {
     P2[i][4] = sum;
   }
   
-  //if (P2[i][4] > 0.0) {
-  //	  printf("%Lf %Lf %Lf %Lf %.11Lf\n", P2[i][0], P2[i][1], P2[i][2], P2[i][3], P2[i][4]);
-  //	}
+  if (P2[i][4] > 0.0) {
+  	  printf("%Lf %Lf %Lf %Lf %.11Lf\n", P2[i][0], P2[i][1], P2[i][2], P2[i][3], P2[i][4]);
+  	}
 
   end = time(NULL);
   printf("\n%Lf\n", (long double)(end-start));

@@ -1,0 +1,15 @@
+Parallelisation of BFS
+We initially used a recursive crawling method for performing the breadth-first search (BFS) required to map probabilities in the lattice.
+
+We found that applying OpenMP directives to the recursive portion was difficult, especially since the probability that a defect appeared in a particular position on the lattice likely depended on other probabilities which may not have been updated.
+
+Instead, we aimed to change the model of how we traverse through the 12-ary tree. We were considering switching entirely to the matrix-vector multiplication method of BFS with the boolean semiring model, but instead we opted for a serial traversal of BFS that still adopted the semiring model. We use two different semirings - one for updating the probability and one for updating the position and time steps (ELABORATE). This made it easier for us to directly write parallelizing pragmas because our serial implementation resulted in several `for` loops which are simple to parallelize.
+
+SPMD shared memory with OpenMP
+We used the SPMD paradigm of parallelism in order to achieve initial speedup. We used the standard library for shared memory multiprocessing, OpenMP. When parallelizing `for` loops, we used the standard compiler directive `pragma omp parallel`, designating shared matrices and iterators appropriately with the `shared` and `private` keywords.
+
+Hybrid SPMD with OpenMP-MPI
+We used the common hybrid model of combining message passing with MPI with OpenMP. By splitting the work that needs to be done across several 
+
+Advanced features
+
