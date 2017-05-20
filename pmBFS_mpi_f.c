@@ -11,7 +11,7 @@
 
 #define N 6
 #define P_SIZE ((int) (pow(12, N+1)-1)/11)
-//typedef unsigned int unint32_t;
+
 /* Barriers */
 long double E_1_l = 2.951646;
 long double E_4_l = -3590.207247+3592.956166;
@@ -25,7 +25,6 @@ long double kb = 8.6173324e-5;
 /* Vibrational frequency and temperature*/
 long double v = 1.6e13;
 long double T = 1000;
-/* T = 1800; */
 
 /* Nearest neighbour distance */
 long double nnd =  3.08472680894400e-1;
@@ -69,21 +68,15 @@ long double opvec2[4][3][3];
 
 // mat0 is product, mat1, mat2 are things to be multiplied
 void mat_mul(long double prod[3][3], long double mat1[3][3], long double mat2[3][3]) {
-  int i, j, k;
-
-  // #pragma omp parallel shared(prod, mat1, mat2) private(i, j, k)
-  // {
-  //   #pragma omp for schedule(static)
-    for (i = 0; i < 3; i++) {
-      for (j = 0; j < 3; j++) {
-        prod[i][j] = 0.0;
-        for (k = 0; k < 3; k++) {
-          prod[i][j] += mat1[i][k] * mat2[k][j];
-        }
-      }
+  // maybe loop unrolling will do some good here
+  int i, j;
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      prod[i][j] = mat1[i][0]*mat2[0][j]
+                 + mat1[i][1]*mat2[1][j]
+                 + mat1[i][2]*mat2[2][j];
     }
-  // }
-
+  }
   return;
 }
 
@@ -130,64 +123,63 @@ void mat_pow(long double mat0[3][3], long double mat2[3][3], int power) {
 void mat_vec_mul(long double prod[3], long double vec[3], long double mat[3][3]) {
   int i, k;
 
-  // #pragma omp parallel shared(prod, vec, mat) private (i, k)
-  // {
-  //   #pragma omp for schedule(static)
-    for (i = 0; i < 3; i++) {
-      prod[i] = 0.0;
-      for (int k = 0; k < 3; k++) {
-        prod[i] += vec[k] * mat[k][i];
-      }
-    }
-  // }
+  for (i = 0; i < 3; i++) {
+    prod[i] = vec[0]*mat[0][i]
+            + vec[1]*mat[1][i]
+            + vec[2]*mat[2][i];
+  }
 
   return;
 }
 
 /* Run simulation */
-// A[i][j] keeps track of allowable transitions between i and j
 void BFS(long double A[P_SIZE][5], long double P[P_SIZE][5], int world_rank, int world_size, int m) {
+
   int rank;
   long int lower, upper, i, j, k, size, width, width2, size2, start, end;
   long double holder[5];
+
   MPI_Request request;
   MPI_Status status;
   start = 0;
   end = 1;
+
   for (k = 0; k < m; k++) {
     start += pow(12, k);
     end += pow(12, k+1);
   }
   width = end - start;
+
   size = world_size < width ? world_size : width;
-  k = world_rank <= (width-1) ? (long int) world_rank : (long int) world_size;
+  k = world_rank < width ? (long int) world_rank : (long int) world_size;
+
   for (i = start + (long int) round((k*width)/(1.0*size)); i < start + (long int) round(((world_rank+1)*width)/(1.0*size)); i++) {
-    // lower bound of particles we can move to
+
     if (m > 0){
-      width2 = end - start - pow(12, m) + pow(12, m-1);
+      // replaced end - start with width
+      width2 = width - pow(12, m) + pow(12, m-1);
       size2 = world_size < width2 ? world_size : width2;
       rank = (int) floor(((floor((i-1.0)/12.0)-(start-pow(12,m-1)))*size2)/(1.0*width2));
-      if (rank != world_rank)
-	{
-	  MPI_Recv(holder,
-		   5,
-		   MPI_LONG_DOUBLE,
-		   rank,
-		   world_rank,
-		   MPI_COMM_WORLD,
-		   &status);
+      if (rank != world_rank) {
+    	  MPI_Recv(holder,
+    		   5,
+    		   MPI_LONG_DOUBLE,
+    		   rank,
+    		   world_rank,
+    		   MPI_COMM_WORLD,
+    		   &status);
 
-	  P[i][0] = holder[0];
-	  P[i][1] = holder[1];
-	  P[i][2] = holder[2];
-	  P[i][3] = holder[3];
-	  P[i][4] = holder[4];
-	}
+    	  P[i][0] = holder[0];
+    	  P[i][1] = holder[1];
+    	  P[i][2] = holder[2];
+    	  P[i][3] = holder[3];
+    	  P[i][4] = holder[4];
+    	}
     }
 
     lower = (12*i+1) < P_SIZE ? (12*i+1) : P_SIZE;
-
     upper = (12*i+13) <= P_SIZE ? (12*i+13) : P_SIZE;
+
 	  // iterate through the 12 possible lattice movements
     for (j = lower; j < upper; j++) {
       P[j][0] = A[j][0]+P[i][0];
@@ -199,25 +191,24 @@ void BFS(long double A[P_SIZE][5], long double P[P_SIZE][5], int world_rank, int
       P[j][3] = A[j][3]+P[i][3];
       // [4] is probability
       P[j][4] = A[j][4]*P[i][4];
-      if (m < N){
+      if (m < N) {
       	width2 = width + pow(12, m+1) - pow(12, m);
       	size2 = world_size < width2 ? world_size : width2;
       	rank = (int) floor(((j-(start+pow(12,m)))*size2)/(1.0*width2));
-      	if (rank != world_rank)
-	  {
-	    holder[0] = P[j][0];
-	    holder[1] = P[j][1];
-	    holder[2] = P[j][2];
-	    holder[3] = P[j][3];
-	    holder[4] = P[j][4];
-	    MPI_Isend(holder,
-		      5,
-		      MPI_LONG_DOUBLE,
-		      rank,
-		      rank,
-		      MPI_COMM_WORLD,
-		      &request);
-	  }
+      	if (rank != world_rank) {
+    	    holder[0] = P[j][0];
+    	    holder[1] = P[j][1];
+    	    holder[2] = P[j][2];
+    	    holder[3] = P[j][3];
+    	    holder[4] = P[j][4];
+    	    MPI_Isend(holder,
+    		      5,
+    		      MPI_LONG_DOUBLE,
+    		      rank,
+    		      rank,
+    		      MPI_COMM_WORLD,
+    		      &request);
+    	  }
       }
     }
   }
@@ -235,7 +226,7 @@ int main(int argc, char** argv) {
   long double r4 = v*exp(-E_3_4/kb/T);
   long double r5 = v*exp(-E_c/kb/T);
   long double Q1, Q2;
-  long int i, j, k,kk,l,m, width,width2,size2,size,endd,startt;
+  long int i, j, k, kk, l, m, width, width2, size2, size, endd, startt;
 
   long double (*P)[5];
   long double (*P2)[5];
