@@ -144,10 +144,19 @@ void BFS(long double A[P_SIZE][5], long double P[P_SIZE][5], int world_rank, int
   start = 0;
   end = 1;
 
+  // for (k = 0; k < m; k++) {
+  //   start += pow(12, k);
+  //   end += pow(12, k+1);
+  // }
+
   for (k = 0; k < m; k++) {
     start += pow(12, k);
-    end += pow(12, k+1);
   }
+  if (m != 0) {
+    end = start;
+    end += pow(12, m);
+  }
+
   width = end - start;
 
   size = world_size < width ? world_size : width;
@@ -368,21 +377,21 @@ int main(int argc, char** argv) {
     width = endd - startt;
     size = world_size < width ? world_size : width;
     kk = world_rank <= (width-1) ? (long int) world_rank : (long int) world_size;
+
     for (i = startt + (long int) round((kk)*(width)/(1.0*size)); i < startt + (long int) round((world_rank+1.0)*width/(1.0*size)); i++) {
-      if (m > 1){
+      if (m > 1) {
       	width2 = endd - startt - pow(12, m) + pow(12, m-1);
       	size2 = world_size < width2 ? world_size : width2;
       	rank = (int) floor((floor((i-1.0)/12.0)-(startt-pow(12,m-1)))*size2/(1.0*(width2)));
-	if (rank != world_rank)
-	  {
-  	    MPI_Recv(&swtcher[i],
-                 1,
-                 MPI_INT,
-                 rank,
-                 world_rank,
-                 MPI_COMM_WORLD,
-                 &status);
-	  }
+	      if (rank != world_rank) {
+    	    MPI_Recv(&swtcher[i],
+                   1,
+                   MPI_INT,
+                   rank,
+                   world_rank,
+                   MPI_COMM_WORLD,
+                   &status);
+	      }
 	    }
       if (swtcher[i] == 0 || swtcher[i] == 2) {
         for (k = 0; k < 12; k++) {
@@ -403,16 +412,15 @@ int main(int argc, char** argv) {
       		    width2 = width + pow(12,m+1)-pow(12,m);
       		    size2 = world_size < width2 ? world_size : width2;
       		    rank = (int) floor(((n_index-(startt+pow(12,m)))*size2)/(1.0*width2));
-		    if (rank != world_rank)
-		      {
-			MPI_Isend(&swtcher[n_index],
-				  1,
-				  MPI_INT,
-				  rank,
-				  rank,
-				  MPI_COMM_WORLD,
-				  &request);
-		      }
+      		    if (rank != world_rank) {
+          			MPI_Isend(&swtcher[n_index],
+          				  1,
+          				  MPI_INT,
+          				  rank,
+          				  rank,
+          				  MPI_COMM_WORLD,
+          				  &request);
+          		}
       		  }
 	        }
           // below plane
@@ -427,16 +435,15 @@ int main(int argc, char** argv) {
       		    width2 = width + pow(12, m+1) - pow(12, m);
       		    size2 = world_size < width2 ? world_size : width2;
       		    rank = (int) floor(((n_index-(startt+pow(12,m)))*size2)/(1.0*width2));
-      		    if (rank != world_rank)
-		      {
-			MPI_Isend(&swtcher[n_index],
-				  1,
-				  MPI_INT,
-				  rank,
-				  rank,
-				  MPI_COMM_WORLD,
-				  &request);
-		      }
+      		    if (rank != world_rank) {
+          			MPI_Isend(&swtcher[n_index],
+          				  1,
+          				  MPI_INT,
+          				  rank,
+          				  rank,
+          				  MPI_COMM_WORLD,
+          				  &request);
+		          }
       		  }
 	        }
           // above plane
@@ -447,20 +454,19 @@ int main(int argc, char** argv) {
       		  A[n_index][3] = 1./Q1;
       		  A[n_index][4] = r4/Q1;
       		  swtcher[n_index] = (swtcher[i]+1)%4;
-      		  if (m < N-1){
+      		  if (m < N-1) {
       		    width2 = width + pow(12, m+1) - pow(12, m);
       		    size2 = world_size < width2 ? world_size : width2;
       		    rank = (int) floor(((n_index-(startt+pow(12,m)))*size2)/(1.0*width2));
-		    if (rank != world_rank)
-		      {
-			MPI_Isend(&swtcher[n_index],
-				  1,
-				  MPI_INT,
-				  rank,
-				  rank,
-				  MPI_COMM_WORLD,
-				  &request);
-		      }
+		          if (rank != world_rank) {
+          			MPI_Isend(&swtcher[n_index],
+          				  1,
+          				  MPI_INT,
+          				  rank,
+          				  rank,
+          				  MPI_COMM_WORLD,
+          				  &request);
+          		}
       		  }
   	      }
   	    }
@@ -479,20 +485,19 @@ int main(int argc, char** argv) {
       		  A[n_index][3] = 1./Q2;
       		  A[n_index][4] = r2/Q2;
 		        swtcher[n_index] = swtcher[i];
-      	  	if (m < N-1){
+      	  	if (m < N-1) {
       		    width2 = width + pow(12, m+1) - pow(12, m);
       		    size2 = world_size < width2 ? world_size : width2;
       		    rank = (int) floor(((n_index-(startt+pow(12,m)))*size2)/(1.0*width2));
-		    if (rank != world_rank)
-		      {
-			MPI_Isend(&swtcher[n_index],
-				  1,
-				  MPI_INT,
-				  rank,
-				  rank,
-				  MPI_COMM_WORLD,
-				  &request);
-		      }
+		          if (rank != world_rank) {
+          			MPI_Isend(&swtcher[n_index],
+          				  1,
+          				  MPI_INT,
+          				  rank,
+          				  rank,
+          				  MPI_COMM_WORLD,
+          				  &request);
+		          }
       		  }
       		}
           else if (k < 9) {
@@ -502,20 +507,19 @@ int main(int argc, char** argv) {
       		  A[n_index][3] = 1./Q2;
       		  A[n_index][4] = r4/Q2;
       		  swtcher[n_index] = (swtcher[i]+3)%4;
-      		  if (m < N-1){
+      		  if (m < N-1) {
       		    width2 = width + pow(12, m+1) - pow(12, m);
       		    size2 = world_size < width2 ? world_size : width2;
       		    rank = (int) floor(((n_index-(startt+pow(12,m)))*size2)/(1.0*width2));
-      		    if (rank != world_rank)
-		      {
-			MPI_Isend(&swtcher[n_index],
-				  1,
-				  MPI_INT,
-				  rank,
-				  rank,
-				  MPI_COMM_WORLD,
-				  &request);
-		      }
+      		    if (rank != world_rank) {
+          			MPI_Isend(&swtcher[n_index],
+          				  1,
+          				  MPI_INT,
+          				  rank,
+          				  rank,
+          				  MPI_COMM_WORLD,
+          				  &request);
+		          }
       		  }
       	  }
           else {
@@ -525,20 +529,19 @@ int main(int argc, char** argv) {
       		  A[n_index][3] = 1./Q2;
       		  A[n_index][4] = r3/Q2;
       		  swtcher[n_index] = (swtcher[i]+1)%4;
-    	  	  if (m < N-1){
+    	  	  if (m < N-1) {
       		    width2 = width + pow(12, m+1) - pow(12, m);
       		    size2 = world_size < width2 ? world_size : width2;
       		    rank = (int) floor(((n_index-(startt+pow(12,m)))*size2)/(1.0*width2));
-      		    if (rank != world_rank)
-		      {
-			MPI_Isend(&swtcher[n_index],
-				  1,
-				  MPI_INT,
-				  rank,
-				  rank,
-				  MPI_COMM_WORLD,
-				  &request);
-		      }
+      		    if (rank != world_rank) {
+          			MPI_Isend(&swtcher[n_index],
+          				  1,
+          				  MPI_INT,
+          				  rank,
+          				  rank,
+          				  MPI_COMM_WORLD,
+          				  &request);
+		          }
       		  }
       	  }
         }
@@ -584,14 +587,13 @@ int main(int argc, char** argv) {
 
       for (j = startt; j < endd; j++) {
 	      rank = (int) floor((j-startt)*1.0*size/(1.0*width));
-	      if (rank != 0)
-		{
-		  MPI_Bcast(&P[j][0], 1, MPI_LONG_DOUBLE, rank, MPI_COMM_WORLD);
-		  MPI_Bcast(&P[j][1], 1, MPI_LONG_DOUBLE, rank, MPI_COMM_WORLD);
-		  MPI_Bcast(&P[j][2], 1, MPI_LONG_DOUBLE, rank, MPI_COMM_WORLD);
-		  MPI_Bcast(&P[j][3], 1, MPI_LONG_DOUBLE, rank, MPI_COMM_WORLD);
-		  MPI_Bcast(&P[j][4], 1, MPI_LONG_DOUBLE, rank, MPI_COMM_WORLD);
-		}
+	      if (rank != 0) {
+    		  MPI_Bcast(&P[j][0], 1, MPI_LONG_DOUBLE, rank, MPI_COMM_WORLD);
+    		  MPI_Bcast(&P[j][1], 1, MPI_LONG_DOUBLE, rank, MPI_COMM_WORLD);
+    		  MPI_Bcast(&P[j][2], 1, MPI_LONG_DOUBLE, rank, MPI_COMM_WORLD);
+    		  MPI_Bcast(&P[j][3], 1, MPI_LONG_DOUBLE, rank, MPI_COMM_WORLD);
+    		  MPI_Bcast(&P[j][4], 1, MPI_LONG_DOUBLE, rank, MPI_COMM_WORLD);
+    		}
 	      if (world_rank == 0) {
 	        printf("%Lf %Lf %Lf %Lf %.11Lf\n", P[j][0], P[j][1], P[j][2], P[j][3], P[j][4]);
 	      }
