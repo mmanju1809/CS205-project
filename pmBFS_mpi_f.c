@@ -366,10 +366,17 @@ int main(int argc, char** argv) {
     startt = 0;
     endd = 1;
 
+    // for (k = 0; k < m; k++) {
+    // 	startt += pow(12, k);
+    // 	endd += pow(12, k+1);
+    // }
+
     for (k = 0; k < m; k++) {
-    	startt += pow(12, k);
-    	endd += pow(12, k+1);
+      startt += pow(12, k);
     }
+    // since m != 0
+    endd = startt;
+    endd += pow(12, m);
 
     width = endd - startt;
     size = world_size < width ? world_size : width;
@@ -377,7 +384,9 @@ int main(int argc, char** argv) {
 
     for (i = startt + (long int) round((kk)*(width)/(1.0*size)); i < startt + (long int) round((world_rank+1.0)*width/(1.0*size)); i++) {
       if (m > 1) {
-      	width2 = endd - startt - pow(12, m) + pow(12, m-1);
+        // replaced endd - startt
+        // replaced - pow(12, m) + pow(12, m-1)
+      	width2 = width - (11*pow(12, m-1));
       	size2 = world_size < width2 ? world_size : width2;
       	rank = (int) floor((floor((i-1.0)/12.0)-(startt-pow(12,m-1)))*size2/(1.0*(width2)));
 	      if (rank != world_rank) {
@@ -406,7 +415,8 @@ int main(int argc, char** argv) {
       		  A[n_index][4] = r1/Q1;
 		        swtcher[n_index] = swtcher[i];
 		        if (m < N-1){
-      		    width2 = width + pow(12,m+1)-pow(12,m);
+              // replaced + pow(12,m+1)-pow(12,m)
+      		    width2 = width + (11*pow(12, m));
       		    size2 = world_size < width2 ? world_size : width2;
       		    rank = (int) floor(((n_index-(startt+pow(12,m)))*size2)/(1.0*width2));
       		    if (rank != world_rank) {
@@ -429,7 +439,8 @@ int main(int argc, char** argv) {
       		  A[n_index][4] = r3/Q1;
       		  swtcher[n_index] = (swtcher[i]+3)%4;
 		        if (m < N-1){
-      		    width2 = width + pow(12, m+1) - pow(12, m);
+              // replaced + pow(12, m+1) - pow(12, m)
+      		    width2 = width + (11*pow(12, m));
       		    size2 = world_size < width2 ? world_size : width2;
       		    rank = (int) floor(((n_index-(startt+pow(12,m)))*size2)/(1.0*width2));
       		    if (rank != world_rank) {
@@ -452,7 +463,8 @@ int main(int argc, char** argv) {
       		  A[n_index][4] = r4/Q1;
       		  swtcher[n_index] = (swtcher[i]+1)%4;
       		  if (m < N-1) {
-      		    width2 = width + pow(12, m+1) - pow(12, m);
+              // replaced + pow(12, m+1) - pow(12, m)
+      		    width2 = width + (11*pow(12, m));
       		    size2 = world_size < width2 ? world_size : width2;
       		    rank = (int) floor(((n_index-(startt+pow(12,m)))*size2)/(1.0*width2));
 		          if (rank != world_rank) {
@@ -483,7 +495,8 @@ int main(int argc, char** argv) {
       		  A[n_index][4] = r2/Q2;
 		        swtcher[n_index] = swtcher[i];
       	  	if (m < N-1) {
-      		    width2 = width + pow(12, m+1) - pow(12, m);
+              // replaced + pow(12, m+1) - pow(12, m)
+      		    width2 = width + (11*pow(12, m));
       		    size2 = world_size < width2 ? world_size : width2;
       		    rank = (int) floor(((n_index-(startt+pow(12,m)))*size2)/(1.0*width2));
 		          if (rank != world_rank) {
@@ -505,7 +518,8 @@ int main(int argc, char** argv) {
       		  A[n_index][4] = r4/Q2;
       		  swtcher[n_index] = (swtcher[i]+3)%4;
       		  if (m < N-1) {
-      		    width2 = width + pow(12, m+1) - pow(12, m);
+              // replaced + pow(12, m+1) - pow(12, m)
+      		    width2 = width + (11*pow(12, m));
       		    size2 = world_size < width2 ? world_size : width2;
       		    rank = (int) floor(((n_index-(startt+pow(12,m)))*size2)/(1.0*width2));
       		    if (rank != world_rank) {
@@ -527,7 +541,8 @@ int main(int argc, char** argv) {
       		  A[n_index][4] = r3/Q2;
       		  swtcher[n_index] = (swtcher[i]+1)%4;
     	  	  if (m < N-1) {
-      		    width2 = width + pow(12, m+1) - pow(12, m);
+              // replaced + pow(12, m+1) - pow(12, m)
+      		    width2 = width + (11*pow(12, m));
       		    size2 = world_size < width2 ? world_size : width2;
       		    rank = (int) floor(((n_index-(startt+pow(12,m)))*size2)/(1.0*width2));
       		    if (rank != world_rank) {
@@ -553,7 +568,7 @@ int main(int argc, char** argv) {
   P[0][4] = 1.0;
 
   for (i = 0; i < N+1; i++) {
-    BFS(A, P,world_rank,world_size,i);
+    BFS(A, P, world_rank, world_size, i);
   }
 
   P2[0][0] = 0.0;
