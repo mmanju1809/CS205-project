@@ -68,15 +68,15 @@ long double opvec2[4][3][3];
 
 // mat0 is product, mat1, mat2 are things to be multiplied
 void mat_mul(long double prod[3][3], long double mat1[3][3], long double mat2[3][3]) {
-  // maybe loop unrolling will do some good here
-  int i, j;
-  for (i = 0; i < 3; i++) {
-    for (j = 0; j < 3; j++) {
-      prod[i][j] = mat1[i][0]*mat2[0][j]
-                 + mat1[i][1]*mat2[1][j]
-                 + mat1[i][2]*mat2[2][j];
-    }
-  }
+  prod[0][0] = mat1[0][0]*mat2[0][0]+mat1[0][1]*mat2[1][0]+mat1[0][2]*mat2[2][0];
+  prod[0][1] = mat1[0][0]*mat2[0][1]+mat1[0][1]*mat2[1][1]+mat1[0][2]*mat2[2][1];
+  prod[0][2] = mat1[0][0]*mat2[0][2]+mat1[0][1]*mat2[1][2]+mat1[0][2]*mat2[2][2];
+  prod[1][0] = mat1[1][0]*mat2[0][0]+mat1[1][1]*mat2[1][0]+mat1[1][2]*mat2[2][0];
+  prod[1][1] = mat1[1][0]*mat2[0][1]+mat1[1][1]*mat2[1][1]+mat1[1][2]*mat2[2][1];
+  prod[1][2] = mat1[1][0]*mat2[0][2]+mat1[1][1]*mat2[1][2]+mat1[1][2]*mat2[2][2];
+  prod[2][0] = mat1[2][0]*mat2[0][0]+mat1[2][1]*mat2[1][0]+mat1[2][2]*mat2[2][0];
+  prod[2][1] = mat1[2][0]*mat2[0][1]+mat1[2][1]*mat2[1][1]+mat1[2][2]*mat2[2][1];
+  prod[2][2] = mat1[2][0]*mat2[0][2]+mat1[2][1]*mat2[1][2]+mat1[2][2]*mat2[2][2];
   return;
 }
 
@@ -121,14 +121,9 @@ void mat_pow(long double mat0[3][3], long double mat2[3][3], int power) {
 }
 
 void mat_vec_mul(long double prod[3], long double vec[3], long double mat[3][3]) {
-  int i, k;
-
-  for (i = 0; i < 3; i++) {
-    prod[i] = vec[0]*mat[0][i]
-            + vec[1]*mat[1][i]
-            + vec[2]*mat[2][i];
-  }
-
+  prod[0] = vec[0]*mat[0][0]+vec[1]*mat[1][0]+vec[2]*mat[2][0];
+  prod[1] = vec[0]*mat[0][1]+vec[1]*mat[1][1]+vec[2]*mat[2][1];
+  prod[2] = vec[0]*mat[0][2]+vec[1]*mat[1][2]+vec[2]*mat[2][2];
   return;
 }
 
@@ -166,7 +161,8 @@ void BFS(long double A[P_SIZE][5], long double P[P_SIZE][5], int world_rank, int
 
     if (m > 0){
       // replaced end - start with width
-      width2 = width - pow(12, m) + pow(12, m-1);
+      // replaced - pow(12, m) + pow(12, m-1)
+      width2 = width - (11*pow(12, m-1));
       size2 = world_size < width2 ? world_size : width2;
       rank = (int) floor(((floor((i-1.0)/12.0)-(start-pow(12,m-1)))*size2)/(1.0*width2));
       if (rank != world_rank) {
@@ -201,7 +197,8 @@ void BFS(long double A[P_SIZE][5], long double P[P_SIZE][5], int world_rank, int
       // [4] is probability
       P[j][4] = A[j][4]*P[i][4];
       if (m < N) {
-      	width2 = width + pow(12, m+1) - pow(12, m);
+        // replaced + pow(12, m+1) - pow(12, m)
+      	width2 = width + (11*pow(12,m));
       	size2 = world_size < width2 ? world_size : width2;
       	rank = (int) floor(((j-(start+pow(12,m)))*size2)/(1.0*width2));
       	if (rank != world_rank) {
