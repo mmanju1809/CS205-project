@@ -1,0 +1,42 @@
+\begin{thebibliography}{1}
+
+\bibitem{Kraus}
+H.~Kraus, V.~A. Soltamov, D.~Riedel, S.~Vath, F.~Fuchs, A.~Sperlich, P.~G.
+  Baranov, V.~Dyakonov, and G.~V. Astakhov, ``Room-temperature quantum
+  microwave emitters based on spin defects in silicon carbide,'' {\em Nat.
+  Phys.}, vol.~10, pp.~157--162, Feb 2014.
+
+\bibitem{Soykal}
+O.~O. Soykal, P.~Dev, and S.~E. Economou, ``Silicon vacancy center in $4h$-sic:
+  Electronic structure and spin-photon interfaces,'' {\em Phys. Rev. B},
+  vol.~93, p.~081207, Feb 2016.
+
+\bibitem{Aharonovich}
+I.~Aharonovich, S.~Castelletto, D.~A. Simpson, C.-H. Su, A.~D. Greentree, and
+  S.~Prawer, ``Diamond-based single-photon emitters,'' {\em Reports on Progress
+  in Physics}, vol.~74, no.~7, p.~076501, 2011.
+
+\bibitem{Bracher}
+D.~O. Bracher, X.~Zhang, and E.~L. Hu, ``Selective purcell enhancement of two
+  closely linked zero-phonon transitions of a silicon carbide color center,''
+  {\em arXiv:1609.03918}, 2016.
+
+\bibitem{Kresse1}
+G.~Kresse and J.~Hafner, ``\textit{Ab initio} molecular dynamics for liquid
+  metals,'' {\em Phys. Rev. B}, vol.~47, pp.~558--561, Jan 1993.
+
+\bibitem{Kresse2}
+G.~Kresse and J.~Furthm\"uller, ``Efficient iterative schemes for \textit{ab
+  initio} total-energy calculations using a plane-wave basis set,'' {\em Phys.
+  Rev. B}, vol.~54, pp.~11169--11186, Oct 1996.
+
+\bibitem{Kresse3}
+G.~Kresse and D.~Joubert, ``From ultrasoft pseudopotentials to the projector
+  augmented-wave method,'' {\em Phys. Rev. B}, vol.~59, pp.~1758--1775, Jan
+  1999.
+
+\bibitem{Perdew}
+J.~P. Perdew, K.~Burke, and M.~Ernzerhof, ``Generalized gradient approximation
+  made simple,'' {\em Phys. Rev. Lett.}, vol.~77, pp.~3865--3868, Oct 1996.
+
+\end{thebibliography}

@@ -1,0 +1,92 @@
+This is BibTeX, Version 0.99d (TeX Live 2016)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: SiC_paper.aux
+The style file: ieeetr.bst
+Database file #1: SiC_paperNotes.bib
+Database file #2: refs_SiC.bib
+You're missing a field name---line 2 of file refs_SiC.bib
+ : 
+ : %  author =   {David J. Griffiths},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 11 of file refs_SiC.bib
+ : 
+ : %   author = {{Rabi}, I.~I. and {Zacharias}, J.~R. and {Millman}, S. and {Kusch}, P.
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+Repeated entry---line 190 of file refs_SiC.bib
+ : @article{Bracher
+ :                 ,
+I'm skipping whatever remains of this entry
+You're missing a field name---line 735 of file refs_SiC.bib
+ : 
+ : %  series={World Scientific series in 20th century chemistry},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 745 of file refs_SiC.bib
+ : 
+ : %  number={3$^{\rm rd}$ ed.},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 757 of file refs_SiC.bib
+ : 
+ : %  number={3$^{\rm rd}$ ed.},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 931 of file refs_SiC.bib
+ : 
+ : %    author   = "I. Silvera",
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 940 of file refs_SiC.bib
+ : 
+ : %    organization  = "Elan Technology",
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 947 of file refs_SiC.bib
+ : 
+ : %    organization  = "TeachSpin Inc.",
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You've used 8 entries,
+            1876 wiz_defined-function locations,
+            541 strings with 4902 characters,
+and the built_in function-call counts, 2703 in all, are:
+= -- 282
+> -- 106
+< -- 0
++ -- 38
+- -- 30
+* -- 197
+:= -- 371
+add.period$ -- 8
+call.type$ -- 8
+change.case$ -- 8
+chr.to.int$ -- 0
+cite$ -- 8
+duplicate$ -- 138
+empty$ -- 216
+format.name$ -- 30
+if$ -- 657
+int.to.chr$ -- 0
+int.to.str$ -- 8
+missing$ -- 8
+newline$ -- 27
+num.names$ -- 8
+pop$ -- 13
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 130
+stack$ -- 0
+substring$ -- 216
+swap$ -- 80
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 0
+while$ -- 25
+width$ -- 9
+write$ -- 81
+(There were 9 error messages)
